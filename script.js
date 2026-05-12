@@ -1,4 +1,8 @@
-const map = L.map('map').setView([-7.96301, 112.615822], 13);
+const map = L.map('map', {
+
+  zoomControl: false
+
+}).setView([-7.96301, 112.615822], 13);
 
 L.tileLayer(
   'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
@@ -6,6 +10,12 @@ L.tileLayer(
     maxZoom: 19
   }
 ).addTo(map);
+
+L.control.zoom({
+
+  position: 'bottomright'
+
+}).addTo(map);
 
 // =========================
 // ARRAY MARKER
@@ -95,8 +105,6 @@ async function loadData() {
 
   try {
 
-    // FETCH DATA
-
     const response = await fetch(
       'https://script.google.com/macros/s/AKfycbxWweS6KqpC9CkIcWz0peHfxfeawWVf-BqXo0QAUuXCvtNNuXlpt1PC1vOdmPDgIXNSAw/exec'
     );
@@ -106,7 +114,6 @@ async function loadData() {
     console.log(data);
 
     // CLEAR SIDEBAR
-
     document.getElementById("generator-list").innerHTML = "";
 
     data.forEach(unit => {
@@ -118,79 +125,99 @@ async function loadData() {
         return;
 
       // =========================
-      // POPUP CONTENT
+      // AUTO TABLE
       // =========================
 
-      // =====================
-// AUTO GENERATE TABLE
-// =====================
+      let tableRows = "";
 
-let tableRows = "";
+      for (const key in unit) {
 
-for (const key in unit) {
+        // skip koordinat
+        if (
+          key === "Latitude" ||
+          key === "Longitude"
+        ) continue;
 
-  // skip koordinat agar popup tidak terlalu panjang
-  if (
-    key === "Latitude" ||
-    key === "Longitude"
-  ) continue;
+        let value = unit[key];
 
- // =====================
-// UNIT
-// =====================
+        // =====================
+        // FORMAT LOCATION
+        // =====================
 
-let value = unit[key];
+        if (key === "Location" && value) {
 
-let unitText = units[key] || "";
+          const lat = unit["Latitude"];
+          const lng = unit["Longitude"];
 
-// kosongkan undefined/null
+          value = `
+            <a href="https://www.google.com/maps?q=${lat},${lng}"
+              target="_blank"
+              style="color:#38bdf8; text-decoration:none;">
+              ${value}
+            </a>
+          `;
+        }
 
-if (
-  value === undefined ||
-  value === null ||
-  value === ""
-) {
+        // FORMAT TIMESTAMP
 
-  value = "-";
+        if (key === "Timestamp" && value) {
 
-}
+          const date = new Date(value);
 
-// =====================
-// BUILD TABLE
-// =====================
+          value = date.toLocaleString("id-ID", {
 
-tableRows += `
+            timeZone: "Asia/Jakarta"
 
-  <tr>
-    <td>${key}</td>
-    <td>${value} ${unitText}</td>
-  </tr>
+          });
 
-`;
-}
+        }
 
-// =====================
-// POPUP HTML
-// =====================
+        let unitText = units[key] || "";
 
-const popupContent = `
+        if (
+          value === undefined ||
+          value === null ||
+          value === ""
+        ) {
+          value = "-";
+        }
 
-  <div class="popup">
+        tableRows += `
 
-    <h2>${unit.Device}</h2>
+          <tr>
+            <td>${key === "Device" ? "Generator" : key}</td>
+            <td>${value} ${unitText}</td>
+          </tr>
 
-    <table>
-
-      ${tableRows}
-
-    </table>
-
-  </div>
-
-`;
+        `;
+      }
 
       // =========================
-      // JIKA MARKER SUDAH ADA
+      // POPUP HTML
+      // =========================
+
+      const popupContent = `
+
+      <div class="popup">
+
+        <h2>${unit.Device}</h2>
+
+        <div class="popup-table-wrapper">
+
+          <table class="popup-table">
+
+            ${tableRows}
+
+          </table>
+
+        </div>
+
+      </div>
+
+    `;
+
+      // =========================
+      // UPDATE MARKER
       // =========================
 
       if (markers[unit.Device]) {
@@ -202,26 +229,29 @@ const popupContent = `
       }
 
       // =========================
-      // JIKA MARKER BELUM ADA
+      // CREATE MARKER
       // =========================
 
       else {
 
-        const marker = L.marker([lat, lng],{icon: trainIcon})
+        const marker = L.marker(
+          [lat, lng],
+          { icon: trainIcon }
+        )
         .addTo(map)
         .bindPopup(popupContent);
 
-        markers[unit.Device] = marker;        
+        markers[unit.Device] = marker;
 
       }
 
       // =========================
-      // STATUS
+      // STATUS COLOR
       // =========================
 
       let statusClass = "status-off";
 
-      if(unit["Engine Status"] === "ON"){
+      if (unit["Engine Status"] === "ON") {
 
         statusClass = "status-on";
 
@@ -235,48 +265,84 @@ const popupContent = `
 
       card.className = "generator-card";
 
+      let formattedTime = "-";
+
+      if(unit["Timestamp"]) {
+
+        formattedTime = new Date(
+          unit["Timestamp"]
+        ).toLocaleString("id-ID", {
+
+          timeZone: "Asia/Jakarta"
+
+        });
+
+      }
+
       card.innerHTML = `
-        <div class="generator-title">
-          ${unit.Device}
-        </div>
 
-        <div class="generator-data">
-          Status :
-          <span class="${statusClass}">
-            ${unit["Engine Status"]}
-          </span>
-        </div>
+      <div class="generator-title">
+        ${unit.Device}
+      </div>
 
-        <div class="generator-data">
-          RPM : ${unit.RPM}
-        </div>
+      <div class="generator-data">
+        Engine Status :
+        <span class="${statusClass}">
+          ${unit["Engine Status"] || "-"}
+        </span>
+      </div>
 
-        <div class="generator-data">
-          Battery : ${unit["Battery Voltage"]} V
-        </div>
+      <div class="generator-data">
+        Time : ${formattedTime}
+      </div>
 
-        <div class="generator-data">
-          Fuel : ${unit["Fuel Level"]} %
-        </div>
+      <div class="generator-data">
+        RPM : ${unit["Engine Speed"] || "-"} RPM
+      </div>
 
-        <div class="generator-data">
-          Power : ${unit["Generator Power"]} kW
-        </div>
-      `;
+      <div class="generator-data">
+        Battery : ${unit["Battery Voltage"] || "-"} VDC
+      </div>
 
-      // KLIK CARD
+      <div class="generator-data">
+        Engine Temp : ${unit["Coolant Temp"] || "-"} °C
+      </div>
+
+      <div class="generator-data">
+        Fuel Consumption : ${unit["Fuel Consumption"] || "-"} L/H
+      </div>
+
+      <div class="generator-data">
+        Power : ${unit["Power Total"] || "-"} kW
+      </div>
+
+    `;
+
+      // =========================
+      // CARD CLICK
+      // =========================
 
       card.addEventListener("click", () => {
 
+        // tutup semua popup
+        Object.values(markers).forEach(marker => {
+
+          marker.closePopup();
+
+        });
+
+        // fokus ke marker
         map.setView([lat, lng], 16);
 
+        // buka popup baru
         markers[unit.Device].openPopup();
 
       });
 
+      // TAMBAHKAN CARD
       document
-      .getElementById("generator-list")
-      .appendChild(card);
+        .getElementById("generator-list")
+        .appendChild(card);
 
     });
 
@@ -288,10 +354,48 @@ const popupContent = `
 
 }
 
+// =========================
 // LOAD PERTAMA
+// =========================
 
 loadData();
 
+// =========================
 // REFRESH REALTIME
+// =========================
 
 setInterval(loadData, 5000);
+
+// =========================
+// SIDEBAR TOGGLE
+// =========================
+
+const toggleBtn = document.getElementById("toggleSidebar");
+
+const sidebar = document.querySelector(".sidebar");
+
+toggleBtn.addEventListener("click", () => {
+
+  sidebar.classList.toggle("closed");
+
+  setTimeout(() => {
+
+    map.invalidateSize();
+
+  }, 300);
+
+});
+
+// =========================
+// CLICK MAP = CLOSE POPUP
+// =========================
+
+map.on("click", () => {
+
+  Object.values(markers).forEach(marker => {
+
+    marker.closePopup();
+
+  });
+
+});
