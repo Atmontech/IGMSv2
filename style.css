@@ -253,8 +253,6 @@ body{
 
     font-size:20px;
 
-    letter-spacing:1px;
-
     padding:0 70px;
 
   }
@@ -269,17 +267,26 @@ body{
 
   .sidebar{
 
-    position:absolute;
+    position:fixed;
 
-    top:0;
+    top:60px; /* PENTING */
+
     left:0;
-
-    height:100%;
 
     width:260px;
     min-width:260px;
 
-    box-shadow:2px 0 10px rgba(0,0,0,0.4);
+    height:calc(100vh - 60px);
+
+    background:#111827;
+
+    z-index:1500;
+
+    overflow-y:auto;
+
+    transition:0.3s;
+
+    padding:15px;
 
   }
 
@@ -287,16 +294,13 @@ body{
 
     transform:translateX(-100%);
 
-    width:260px !important;
-    min-width:260px !important;
-
-    padding:20px !important;
-
   }
 
   #map{
 
     width:100vw;
+
+    height:calc(100vh - 60px);
 
   }
 
