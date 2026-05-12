@@ -2,55 +2,58 @@
   margin:0;
   padding:0;
   box-sizing:border-box;
-  font-family:Arial;
+  font-family:Arial, sans-serif;
 }
 
 body{
-
-  margin:0;
-  overflow:hidden;
-
   background:#0f172a;
   color:white;
-
+  overflow:hidden;
 }
 
 /* =========================
    TOPBAR
 ========================= */
 
-.topbar {
+.topbar{
 
-  position: fixed;
+  position:fixed;
 
-  top: 0;
-  left: 0;
+  top:0;
+  left:0;
 
-  width: 100%;
+  width:100%;
+  height:70px;
 
-  height: 70px;
+  background:#0f172a;
 
-  background: #0f172a;
+  display:flex;
+  align-items:center;
+  justify-content:center;
 
-  display: flex;
+  z-index:2000;
 
-  align-items: center;
-
-  justify-content: center;
-
-  z-index: 2000;
-
-  box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+  box-shadow:0 2px 10px rgba(0,0,0,0.3);
 
 }
 
-.topbar h1 {
+.topbar h1{
 
-  color: white;
+  font-size:36px;
 
-  font-size: 40px;
+  letter-spacing:2px;
 
-  letter-spacing: 3px;
+  color:white;
+
+  text-align:center;
+
+  white-space:nowrap;
+
+  overflow:hidden;
+
+  text-overflow:ellipsis;
+
+  padding:0 80px;
 
 }
 
@@ -58,111 +61,66 @@ body{
    TOGGLE BUTTON
 ========================= */
 
-#toggleSidebar {
+#toggleSidebar{
 
-  position: absolute;
+  position:absolute;
 
-  left: 15px;
+  left:15px;
 
-  border: none;
+  border:none;
 
-  background: #111;
-
-  color: white;
-
-  padding: 10px 14px;
-
-  border-radius: 10px;
-
-  cursor: pointer;
-
-  font-size: 24px;
-
-}
-
-/* =========================
-   CONTAINER
-========================= */
-
-.container {
-
-  display: flex;
-
-  width: 100vw;
-
-  height: calc(100vh - 70px);
-
-  margin-top: 70px;
-
-}
-
-/* =========================
-   MAP
-========================= */
-
-#map {
-
-  flex: 1;
-
-  height: calc(100vh - 70px);
-
-}
-
-/* =========================
-   LAYOUT
-========================= */
-
-.container {
-
-  display: flex;
-
-  width: 100vw;
-  height: 100vh;
-
-}   
-
-/* =========================
-SIDEBAR
-========================= */
-
-/* .sidebar{
-
-  width:350px;
   background:#111827;
-  padding:20px;
-  overflow-y:auto;
-  border-right:2px solid #1e293b;
+
+  color:white;
+
+  padding:10px 14px;
+
+  border-radius:12px;
+
+  cursor:pointer;
+
+  font-size:24px;
+
+  z-index:2100;
+
+  box-shadow:0 2px 10px rgba(0,0,0,0.4);
 
 }
 
-.sidebar h2{
+/* =========================
+   MAIN CONTAINER
+========================= */
 
-  margin-bottom:20px;
-  color:#38bdf8;
+.container{
 
-} */
+  display:flex;
+
+  width:100vw;
+
+  height:calc(100vh - 70px);
+
+  margin-top:70px;
+
+}
 
 /* =========================
    SIDEBAR
 ========================= */
 
-.sidebar {
+.sidebar{
 
-  width: 320px;
-  min-width: 320px;
+  width:320px;
+  min-width:320px;
 
-  height: calc(100vh - 60px);
+  background:#111827;
 
-  margin-top: 60px;
+  overflow-y:auto;
 
-  background: #111827;
-  color: white;
+  padding:20px;
 
-  overflow-y: auto;
+  transition:all 0.3s ease;
 
-  transition: all 0.3s ease;
-
-  padding: 20px;
+  z-index:1500;
 
 }
 
@@ -170,35 +128,45 @@ SIDEBAR
    SIDEBAR CLOSED
 ========================= */
 
-.sidebar.closed {
+.sidebar.closed{
 
-  width: 0 !important;
-  min-width: 0 !important;
+  width:0 !important;
+  min-width:0 !important;
 
-  padding: 0 !important;
-  margin: 0 !important;
-  border: none !important;
+  padding:0 !important;
 
-  overflow: hidden;
+  overflow:hidden;
 
 }
 
 /* =========================
-   TOGGLE BUTTON
+   MAP
 ========================= */
 
+#map{
+
+  flex:1;
+
+  height:100%;
+
+}
 
 /* =========================
-CARD
+   CARD
 ========================= */
 
 .generator-card{
 
   background:#1e293b;
-  border-radius:12px;
-  padding:15px;
-  margin-bottom:15px;
+
+  border-radius:16px;
+
+  padding:16px;
+
+  margin-bottom:16px;
+
   cursor:pointer;
+
   transition:0.3s;
 
 }
@@ -211,23 +179,28 @@ CARD
 
 .generator-title{
 
-  font-size:20px;
+  font-size:24px;
+
   font-weight:bold;
-  margin-bottom:10px;
+
+  margin-bottom:12px;
+
   color:#38bdf8;
 
 }
 
 .generator-data{
 
-  margin-bottom:5px;
-  font-size:14px;
+  margin-bottom:8px;
+
+  font-size:16px;
 
 }
 
 .status-on{
 
   color:#22c55e;
+
   font-weight:bold;
 
 }
@@ -235,20 +208,32 @@ CARD
 .status-off{
 
   color:#ef4444;
+
   font-weight:bold;
 
 }
 
 /* =========================
-MAP
+   POPUP
 ========================= */
 
-#map{
+.leaflet-popup-content{
 
-  flex:1;
+  max-height:300px;
 
-  height:100vh;
-  width:100%;
+  overflow-y:auto;
+
+  font-size:13px;
+
+}
+
+/* =========================
+   ZOOM POSITION
+========================= */
+
+.leaflet-top.leaflet-left{
+
+  top:85px;
 
 }
 
@@ -256,68 +241,87 @@ MAP
    MOBILE RESPONSIVE
 ========================= */
 
-@media (max-width: 768px) {
+@media (max-width:768px){
 
-  .sidebar {
+  .topbar{
 
-    width: 260px;
-    min-width: 260px;
-
-    position: absolute;
-
-    z-index: 1500;
-
-    height: 100vh;
+    height:60px;
 
   }
 
-  .sidebar.closed {
+  .topbar h1{
 
-    transform: translateX(-100%);
+    font-size:20px;
 
-    width: 260px !important;
-    min-width: 260px !important;
+    letter-spacing:1px;
 
-  }
-
-  #map {
-
-    width: 100vw;
+    padding:0 70px;
 
   }
 
-}
+  .container{
 
-/* =========================
-   POPUP MOBILE
-========================= */
+    margin-top:60px;
 
-.leaflet-popup-content {
+    height:calc(100vh - 60px);
 
-  max-height: 300px;
+  }
 
-  overflow-y: auto;
+  .sidebar{
 
-  font-size: 12px;
+    position:absolute;
 
-}
+    top:0;
+    left:0;
 
-/* =========================
-   ZOOM BUTTON POSITION
-========================= */
+    height:100%;
 
-.leaflet-top.leaflet-left {
+    width:260px;
+    min-width:260px;
 
-  top: 80px;
+    box-shadow:2px 0 10px rgba(0,0,0,0.4);
 
-}
+  }
 
-/* =========================
-   RESPONSIVE TITLE
-========================= */
+  .sidebar.closed{
 
-.generator-title {
+    transform:translateX(-100%);
 
-  font-size: clamp(18px, 4vw, 24px);
+    width:260px !important;
+    min-width:260px !important;
+
+    padding:20px !important;
+
+  }
+
+  #map{
+
+    width:100vw;
+
+  }
+
+  .generator-card{
+
+    padding:14px;
+
+  }
+
+  .generator-title{
+
+    font-size:20px;
+
+  }
+
+  .generator-data{
+
+    font-size:14px;
+
+  }
+
+  .leaflet-top.leaflet-left{
+
+    top:75px;
+
+  }
 
 }
