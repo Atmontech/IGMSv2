@@ -98,7 +98,7 @@ async function loadData() {
     // FETCH DATA
 
     const response = await fetch(
-      'https://script.google.com/macros/s/AKfycbwUBct1xLizTPlIFwrugLZzavMrKJ5uCuOeCDCGnDBoBoiHIydWuaKWVLRxuZHdj7_r/exec'
+      'https://script.google.com/macros/s/AKfycbxWweS6KqpC9CkIcWz0peHfxfeawWVf-BqXo0QAUuXCvtNNuXlpt1PC1vOdmPDgIXNSAw/exec'
     );
 
     const data = await response.json();
