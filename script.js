@@ -1,8 +1,10 @@
 const map = L.map('map', {
-
   zoomControl: false
-
 }).setView([-7.96301, 112.615822], 13);
+
+// =========================
+// TILE LAYER
+// =========================
 
 L.tileLayer(
   'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
@@ -11,20 +13,22 @@ L.tileLayer(
   }
 ).addTo(map);
 
+// =========================
+// ZOOM POSITION
+// =========================
+
 L.control.zoom({
-
   position: 'bottomright'
-
 }).addTo(map);
 
 // =========================
-// ARRAY MARKER
+// MARKERS
 // =========================
 
 let markers = {};
 
 // =========================
-// TRAIN MARKER
+// TRAIN ICON
 // =========================
 
 const trainIcon = L.icon({
@@ -83,14 +87,6 @@ const units = {
   "Current (S)": "A",
   "Current (T)": "A",
 
-  "Power (R)": "W",
-  "Power (S)": "W",
-  "Power (T)": "W",
-
-  "Energy (R)": "kWh",
-  "Energy (S)": "kWh",
-  "Energy (T)": "kWh",
-
   "Fuel Delivery Pump": "Bar",
   "Fuel Temperature": "°C",
   "Fuel Consumption": "L/H"
@@ -111,8 +107,6 @@ async function loadData() {
 
     const data = await response.json();
 
-    console.log(data);
-
     // CLEAR SIDEBAR
     document.getElementById("generator-list").innerHTML = "";
 
@@ -121,57 +115,82 @@ async function loadData() {
       const lat = parseFloat(unit.Latitude);
       const lng = parseFloat(unit.Longitude);
 
-      if (isNaN(lat) || isNaN(lng))
-        return;
+      if (isNaN(lat) || isNaN(lng)) return;
 
       // =========================
-      // AUTO TABLE
+      // FORMAT TIMESTAMP
       // =========================
 
-      let tableRows = "";
+      let formattedTime = "-";
+
+      if (unit.Timestamp) {
+
+        formattedTime = new Date(
+          unit.Timestamp
+        ).toLocaleString("id-ID", {
+
+          timeZone: "Asia/Jakarta"
+
+        });
+
+      }
+
+        // =========================
+        // FORMAT LOCATION
+        // =========================
+
+        let locationText = "Location Not Available";
+
+        if (unit.Location && unit.Location !== "") {
+
+          locationText = `
+            <a href="https://www.google.com/maps?q=${lat},${lng}"
+              target="_blank"
+              style="
+                color:#38bdf8;
+                text-decoration:none;
+                font-weight:bold;
+              ">
+              ${unit.Location}
+            </a>
+          `;
+
+        }
+
+      
+
+      // =========================
+      // TABLE DATA
+      // =========================
+
+      let engineRows = "";
+      let electricalRows = "";
+      let otherRows = "";
 
       for (const key in unit) {
 
-        // skip koordinat
+        // skip raw coordinate
         if (
           key === "Latitude" ||
           key === "Longitude"
         ) continue;
 
+        // skip duplicate
+        if (
+          key === "Location" ||
+          key === "Timestamp"
+        ) continue;
+        
+        if (
+          key === "Power (R)" ||
+          key === "Power (S)" ||
+          key === "Power (T)" ||
+          key === "Energy (R)" ||
+          key === "Energy (S)" ||
+          key === "Energy (T)"
+        ) continue;
+
         let value = unit[key];
-
-        // =====================
-        // FORMAT LOCATION
-        // =====================
-
-        if (key === "Location" && value) {
-
-          const lat = unit["Latitude"];
-          const lng = unit["Longitude"];
-
-          value = `
-            <a href="https://www.google.com/maps?q=${lat},${lng}"
-              target="_blank"
-              style="color:#38bdf8; text-decoration:none;">
-              ${value}
-            </a>
-          `;
-        }
-
-        // FORMAT TIMESTAMP
-
-        if (key === "Timestamp" && value) {
-
-          const date = new Date(value);
-
-          value = date.toLocaleString("id-ID", {
-
-            timeZone: "Asia/Jakarta"
-
-          });
-
-        }
-
         let unitText = units[key] || "";
 
         if (
@@ -179,10 +198,12 @@ async function loadData() {
           value === null ||
           value === ""
         ) {
+
           value = "-";
+
         }
 
-        tableRows += `
+        const row = `
 
           <tr>
             <td>${key === "Device" ? "Generator" : key}</td>
@@ -190,23 +211,159 @@ async function loadData() {
           </tr>
 
         `;
+
+        // =========================
+        // ENGINE DATA
+        // =========================
+
+        if (
+
+          key.includes("Engine") ||
+          key.includes("Oil") ||
+          key.includes("Coolant") ||
+          key.includes("Fuel")
+
+        ) {
+
+          engineRows += row;
+
+        }
+
+        // =========================
+        // ELECTRICAL DATA
+        // =========================
+          
+          else if (
+
+          key.includes("Voltage") ||
+          key.includes("Power") ||
+          key.includes("Current") ||
+          key.includes("Energy") ||
+          key.includes("Freq") ||
+          key.includes("Battery") ||
+          key.includes("L1") ||
+          key.includes("L2") ||
+          key.includes("L3") ||
+          key.includes("Gen") ||
+          key.includes("Charger") ||
+          key.includes("pf")
+          
+
+        ){
+
+          electricalRows += row;
+
+        }
+
+        // =========================
+        // OTHER DATA
+        // =========================
+
+       else {
+
+        // STATUS KHUSUS PALING BAWAH
+
+        if (
+
+          key === "LVR" ||
+          key === "UPR" ||
+          key === "FPK" ||
+          key === "FPK FAILURE" ||
+          key === "swt5State"
+
+        ) {
+
+          otherRows += "";
+
+        }
+
+        else {
+
+          otherRows += row;
+
+        }
+
+      }
+
       }
 
       // =========================
-      // POPUP HTML
+      // POPUP CONTENT
       // =========================
 
       const popupContent = `
 
       <div class="popup">
 
-        <h2>${unit.Device}</h2>
+      <h2>${unit.Device || "-"}</h2>
 
         <div class="popup-table-wrapper">
 
           <table class="popup-table">
 
-            ${tableRows}
+           ${otherRows}
+
+            <tr>
+              <td>Location</td>
+              <td>${locationText}</td>
+            </tr>
+
+            <tr>
+              <td>Timestamp</td>
+              <td>${formattedTime}</td>
+            </tr>
+
+
+            <!-- ENGINE -->
+
+            <tr>
+              <td colspan="2" class="section-title">
+                ENGINE
+              </td>
+            </tr>
+
+            ${engineRows}
+
+            <!-- ELECTRICAL -->
+
+            <tr>
+              <td colspan="2" class="section-title">
+                ELECTRICAL
+              </td>
+            </tr>
+
+            ${electricalRows}
+
+            <tr>
+              <td colspan="2" class="section-title">
+                STATUS
+              </td>
+            </tr>
+
+            <tr>
+              <td>LVR</td>
+              <td>${unit["LVR"] || "-"}</td>
+            </tr>
+
+            <tr>
+              <td>UPR</td>
+              <td>${unit["UPR"] || "-"}</td>
+            </tr>
+
+            <tr>
+              <td>FPK</td>
+              <td>${unit["FPK"] || "-"}</td>
+            </tr>
+
+            <tr>
+              <td>FPK FAILURE</td>
+              <td>${unit["FPK FAILURE"] || "-"}</td>
+            </tr>
+
+            <tr>
+              <td>swt5State</td>
+              <td>${unit["swt5State"] || "-"}</td>
+            </tr>
 
           </table>
 
@@ -214,7 +371,7 @@ async function loadData() {
 
       </div>
 
-    `;
+      `;
 
       // =========================
       // UPDATE MARKER
@@ -246,7 +403,7 @@ async function loadData() {
       }
 
       // =========================
-      // STATUS COLOR
+      // STATUS
       // =========================
 
       let statusClass = "status-off";
@@ -258,6 +415,24 @@ async function loadData() {
       }
 
       // =========================
+      // SIDEBAR CITY
+      // =========================
+
+      let city = "-";
+
+      if (unit.Location) {
+
+        const parts = unit.Location.split(",");
+
+        if (parts.length >= 2) {
+
+          city = parts[parts.length - 3]?.trim() || parts[0];
+
+        }
+
+      }
+
+      // =========================
       // SIDEBAR CARD
       // =========================
 
@@ -265,58 +440,48 @@ async function loadData() {
 
       card.className = "generator-card";
 
-      let formattedTime = "-";
-
-      if(unit["Timestamp"]) {
-
-        formattedTime = new Date(
-          unit["Timestamp"]
-        ).toLocaleString("id-ID", {
-
-          timeZone: "Asia/Jakarta"
-
-        });
-
-      }
-
       card.innerHTML = `
 
-      <div class="generator-title">
-        ${unit.Device}
-      </div>
+        <div class="generator-title">
+          ${unit.Generator || unit.Device || "-"}
+        </div>
 
-      <div class="generator-data">
-        Engine Status :
-        <span class="${statusClass}">
-          ${unit["Engine Status"] || "-"}
-        </span>
-      </div>
+        <div class="generator-data">
+          Engine Status :
+          <span class="${statusClass}">
+            ${unit["Engine Status"] || "-"}
+          </span>
+        </div>
 
-      <div class="generator-data">
-        Time : ${formattedTime}
-      </div>
+        <div class="generator-data">
+          Time : ${formattedTime}
+        </div>
 
-      <div class="generator-data">
-        RPM : ${unit["Engine Speed"] || "-"} RPM
-      </div>
+        <div class="generator-data">
+          Location : ${city}
+        </div>
 
-      <div class="generator-data">
-        Battery : ${unit["Battery Voltage"] || "-"} VDC
-      </div>
+        <div class="generator-data">
+          RPM : ${unit["Engine Speed"] || "-"} RPM
+        </div>
 
-      <div class="generator-data">
-        Engine Temp : ${unit["Coolant Temp"] || "-"} °C
-      </div>
+        <div class="generator-data">
+          Battery : ${unit["Battery Voltage"] || "-"} VDC
+        </div>
 
-      <div class="generator-data">
-        Fuel Consumption : ${unit["Fuel Consumption"] || "-"} L/H
-      </div>
+        <div class="generator-data">
+          Engine Temp : ${unit["Coolant Temp"] || "-"} °C
+        </div>
 
-      <div class="generator-data">
-        Power : ${unit["Power Total"] || "-"} kW
-      </div>
+        <div class="generator-data">
+          Fuel Consumption : ${unit["Fuel Consumption"] || "-"} L/H
+        </div>
 
-    `;
+        <div class="generator-data">
+          Power Total : ${unit["Power Total"] || "-"} kW
+        </div>
+
+      `;
 
       // =========================
       // CARD CLICK
@@ -324,22 +489,22 @@ async function loadData() {
 
       card.addEventListener("click", () => {
 
-        // tutup semua popup
         Object.values(markers).forEach(marker => {
 
           marker.closePopup();
 
         });
 
-        // fokus ke marker
         map.setView([lat, lng], 16);
 
-        // buka popup baru
         markers[unit.Device].openPopup();
 
       });
 
-      // TAMBAHKAN CARD
+      // =========================
+      // ADD CARD
+      // =========================
+
       document
         .getElementById("generator-list")
         .appendChild(card);
@@ -355,13 +520,13 @@ async function loadData() {
 }
 
 // =========================
-// LOAD PERTAMA
+// FIRST LOAD
 // =========================
 
 loadData();
 
 // =========================
-// REFRESH REALTIME
+// REALTIME REFRESH
 // =========================
 
 setInterval(loadData, 5000);
@@ -387,7 +552,7 @@ toggleBtn.addEventListener("click", () => {
 });
 
 // =========================
-// CLICK MAP = CLOSE POPUP
+// CLICK MAP CLOSE POPUP
 // =========================
 
 map.on("click", () => {
